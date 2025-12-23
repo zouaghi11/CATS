@@ -27,46 +27,103 @@
       color: #eee;
     }
 
-    /* indie gothic rain effect */
-    .rain {
+    /* Chromosome rain container */
+    .chromosome-rain {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 1;
     }
 
-    .rain::before {
-      content: "";
+    /* Individual chromosome */
+    .chromosome {
       position: absolute;
+      top: -50px;
+      width: 12px;
+      height: 25px;
+      background: linear-gradient(to bottom, transparent, var(--violet), transparent);
+      opacity: 0.3;
+      animation: fall linear infinite;
+    }
+
+    /* Create the X-shape of chromosomes */
+    .chromosome::before,
+    .chromosome::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--blood);
+      border-radius: 50%;
+    }
+
+    .chromosome::before {
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .chromosome::after {
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* Add arms to the chromosome */
+    .chromosome .arm {
+      position: absolute;
+      width: 1.5px;
+      height: 15px;
+      background: var(--violet);
+      opacity: 0.6;
+    }
+
+    .chromosome .arm.top {
+      top: 0;
+    }
+
+    .chromosome .arm.bottom {
+      bottom: 0;
+    }
+
+    .chromosome .arm.left {
+      left: -6px;
+      transform: rotate(30deg);
+    }
+
+    .chromosome .arm.right {
+      right: -6px;
+      transform: rotate(-30deg);
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+      }
+    }
+
+    /* Subtle overlay for depth */
+    .rain-overlay {
+      position: fixed;
       inset: 0;
       background: 
         repeating-linear-gradient(
           90deg,
           transparent,
           transparent 20px,
-          rgba(180, 142, 173, 0.03) 21px,
+          rgba(180, 142, 173, 0.01) 21px,
           transparent 22px
         ),
         repeating-linear-gradient(
           0deg,
           transparent,
           transparent 2px,
-          rgba(139, 0, 0, 0.08) 3px,
+          rgba(139, 0, 0, 0.03) 3px,
           transparent 4px
         );
       animation: rainFall 0.8s linear infinite;
-    }
-
-    .rain::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        circle at 30% 20%,
-        rgba(155, 0, 0, 0.15) 0%,
-        transparent 50%
-      );
-      animation: pulseGlow 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 2;
     }
 
     @keyframes rainFall {
@@ -74,9 +131,23 @@
       to { transform: translateY(100%); }
     }
 
+    /* Pulse glow effect */
+    .glow {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(
+        circle at 30% 20%,
+        rgba(155, 0, 0, 0.08) 0%,
+        transparent 50%
+      );
+      animation: pulseGlow 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
     @keyframes pulseGlow {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.7; }
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.4; }
     }
 
     .container {
@@ -89,7 +160,7 @@
         0 0 40px rgba(180,0,180,0.5),
         inset 0 0 20px rgba(0,0,0,0.5);
       position: relative;
-      z-index: 2;
+      z-index: 3;
       border: 1px solid rgba(180, 142, 173, 0.1);
     }
 
@@ -291,7 +362,9 @@
 </head>
 <body>
 
-  <div class="rain"></div>
+  <div class="chromosome-rain" id="chromosomeRain"></div>
+  <div class="rain-overlay"></div>
+  <div class="glow"></div>
 
   <div class="sound-indicator muted" id="soundToggle">🔇</div>
   <div class="audio-prompt" id="audioPrompt">🔊 Click to enable sound</div>
@@ -311,6 +384,7 @@
     const message = document.getElementById('message');
     const soundToggle = document.getElementById('soundToggle');
     const audioPrompt = document.getElementById('audioPrompt');
+    const chromosomeRain = document.getElementById('chromosomeRain');
     
     let moveCount = 0;
     const maxMoves = 5;
@@ -319,61 +393,60 @@
     let audioContext;
     let backgroundNoise;
 
+    // Create chromosome rain
+    function createChromosomeRain() {
+      const numChromosomes = 40;
+      
+      for (let i = 0; i < numChromosomes; i++) {
+        const chromosome = document.createElement('div');
+        chromosome.className = 'chromosome';
+        
+        // Random horizontal position
+        const left = Math.random() * 100;
+        chromosome.style.left = `${left}vw`;
+        
+        // Random animation duration (slower for larger, faster for smaller)
+        const size = 0.5 + Math.random() * 1;
+        chromosome.style.width = `${12 * size}px`;
+        chromosome.style.height = `${25 * size}px`;
+        
+        // Random animation duration and delay
+        const duration = 10 + Math.random() * 20;
+        const delay = Math.random() * 5;
+        chromosome.style.animationDuration = `${duration}s`;
+        chromosome.style.animationDelay = `${delay}s`;
+        
+        // Random opacity
+        chromosome.style.opacity = (0.1 + Math.random() * 0.2).toString();
+        
+        // Add arms to create X-shape
+        const arms = ['top left', 'top right', 'bottom left', 'bottom right'];
+        arms.forEach(position => {
+          const arm = document.createElement('div');
+          arm.className = `arm ${position}`;
+          chromosome.appendChild(arm);
+        });
+        
+        chromosomeRain.appendChild(chromosome);
+      }
+    }
+
     // Create subtle white noise for background
     function createBackgroundNoise() {
       if (!audioContext || !soundsEnabled) return null;
       
-      // Create a buffer with white noise
-      const bufferSize = audioContext.sampleRate * 2; // 2 seconds of buffer
-      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      const output = buffer.getChannelData(0);
-      
-      // Fill buffer with filtered noise (more like gentle rain)
-      for (let i = 0; i < bufferSize; i++) {
-        // Create filtered noise (lower frequencies only)
-        output[i] = (Math.random() * 2 - 1) * 0.5;
-        
-        // Apply low-pass filter by averaging with previous samples
-        if (i > 3) {
-          output[i] = (output[i] + output[i-1] * 0.3 + output[i-2] * 0.2 + output[i-3] * 0.1) / 1.6;
-        }
-      }
-      
-      // Create source and gain node
-      const noiseSource = audioContext.createBufferSource();
-      const gainNode = audioContext.createGain();
-      
-      noiseSource.buffer = buffer;
-      noiseSource.loop = true;
-      
-      // Very quiet gain
-      gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
-      
-      // Connect
-      noiseSource.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      noiseSource.start();
-      
-      return { noiseSource, gainNode };
-    }
-
-    // Create a gentle wind/rain sound
-    function createAtmosphericSound() {
-      if (!audioContext || !soundsEnabled) return null;
-      
-      // Create brown noise (softer than white noise)
+      // Create a buffer with filtered noise
       const bufferSize = audioContext.sampleRate * 3;
       const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
       const output = buffer.getChannelData(0);
       
+      // Create gentle brown noise
       let lastOut = 0.0;
       for (let i = 0; i < bufferSize; i++) {
-        // Brown noise algorithm
         const white = Math.random() * 2 - 1;
         output[i] = (lastOut + (0.02 * white)) / 1.02;
         lastOut = output[i];
-        output[i] *= 1.5; // Scale
+        output[i] *= 1.5;
       }
       
       const source = audioContext.createBufferSource();
@@ -383,7 +456,7 @@
       source.loop = true;
       
       // Very subtle volume
-      gainNode.gain.setValueAtTime(0.015, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
       
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
@@ -397,20 +470,17 @@
     function playCatSound() {
       if (!audioContext || !soundsEnabled || !audioUnlocked) return;
       
-      // Create oscillator for purr
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
       oscillator.type = 'sine';
-      
-      // Gentle purr frequencies
       oscillator.frequency.setValueAtTime(120, audioContext.currentTime);
       oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.3);
       oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 0.6);
       
-      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.03, audioContext.currentTime + 0.3);
-      gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.6);
+      gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.02, audioContext.currentTime + 0.3);
+      gainNode.gain.exponentialRampToValueAtTime(0.04, audioContext.currentTime + 0.6);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.9);
       
       oscillator.connect(gainNode);
@@ -432,7 +502,7 @@
       oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.2);
       
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.1);
+      gainNode.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.1);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
       
       oscillator.connect(gainNode);
@@ -453,7 +523,7 @@
       oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
       oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
       
-      gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
       
       oscillator.connect(gainNode);
@@ -467,7 +537,6 @@
     function playRevealSound() {
       if (!audioContext || !soundsEnabled || !audioUnlocked) return;
       
-      // Create multiple gentle tones
       for (let i = 0; i < 2; i++) {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
@@ -478,7 +547,7 @@
         oscillator.frequency.exponentialRampToValueAtTime(baseFreq + 200, audioContext.currentTime + 0.5);
         
         gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.2);
+        gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.2);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
         
         oscillator.connect(gainNode);
@@ -493,27 +562,20 @@
     function unlockAudio() {
       if (audioUnlocked) return;
       
-      console.log('Unlocking audio...');
-      
-      // Create audio context
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
       
-      // Resume if suspended
       if (audioContext.state === 'suspended') {
         audioContext.resume().then(() => {
-          console.log('Audio context resumed');
           audioUnlocked = true;
           soundsEnabled = true;
           updateAudioUI();
           
-          // Start subtle atmospheric sound
           if (soundsEnabled) {
-            backgroundNoise = createAtmosphericSound();
+            backgroundNoise = createBackgroundNoise();
           }
         }).catch(e => {
-          console.log('Failed to resume audio context:', e);
           audioPrompt.classList.add('show');
         });
       } else {
@@ -521,9 +583,8 @@
         soundsEnabled = true;
         updateAudioUI();
         
-        // Start subtle atmospheric sound
         if (soundsEnabled) {
-          backgroundNoise = createAtmosphericSound();
+          backgroundNoise = createBackgroundNoise();
         }
       }
     }
@@ -539,7 +600,6 @@
         soundToggle.classList.add('muted');
         audioPrompt.classList.remove('show');
         
-        // Stop background sound
         if (backgroundNoise) {
           backgroundNoise.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         }
@@ -560,14 +620,12 @@
       soundsEnabled = !soundsEnabled;
       
       if (soundsEnabled) {
-        // Start or resume atmospheric sound
         if (!backgroundNoise) {
-          backgroundNoise = createAtmosphericSound();
+          backgroundNoise = createBackgroundNoise();
         } else {
-          backgroundNoise.gainNode.gain.setValueAtTime(0.015, audioContext.currentTime);
+          backgroundNoise.gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
         }
       } else {
-        // Mute atmospheric sound
         if (backgroundNoise) {
           backgroundNoise.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         }
@@ -588,11 +646,9 @@
       button.style.transform = `translate(${x}px, ${y}px)`;
       moveCount++;
       
-      // Play subtle sounds
       playMoveSound();
       setTimeout(() => playCatSound(), 150);
       
-      // Visual effects
       const cats = document.querySelector('.cats');
       cats.style.animation = 'none';
       setTimeout(() => {
@@ -620,7 +676,6 @@
 
     // Setup event listeners
     function setupEventListeners() {
-      // Button hover
       button.addEventListener('mouseenter', () => {
         if (moveCount < maxMoves) {
           playHoverSound();
@@ -628,7 +683,6 @@
         }
       });
 
-      // Button touch/click
       button.addEventListener('touchstart', (e) => {
         e.preventDefault();
         unlockAudio();
@@ -644,17 +698,12 @@
         if (moveCount >= maxMoves) showMessage();
       });
 
-      // Sound toggle
       soundToggle.addEventListener('click', toggleSounds);
-      
-      // Audio prompt
       audioPrompt.addEventListener('click', unlockAudio);
       
-      // Unlock on any interaction
       document.addEventListener('click', unlockAudio, { once: true });
       document.addEventListener('touchstart', unlockAudio, { once: true });
       
-      // Show prompt after delay
       setTimeout(() => {
         if (!audioUnlocked) {
           audioPrompt.classList.add('show');
@@ -662,11 +711,12 @@
       }, 1000);
     }
 
-    // Initialize
+    // Initialize chromosome rain
+    createChromosomeRain();
+    
+    // Setup everything
     setupEventListeners();
     updateAudioUI();
-    
-    console.log('Gothic Cats initialized - Subtle atmospheric sounds ready');
   </script>
 
 </body>
