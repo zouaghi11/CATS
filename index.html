@@ -306,144 +306,133 @@
     <span>safa lmongol!!</span>
   </div>
 
-  <!-- All audio is embedded as base64 for GitHub compatibility -->
-  <audio id="bgAmbiance" loop preload="none">
-    <!-- Very short rain sound base64 -->
-    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ" type="audio/wav">
-  </audio>
-
-  <audio id="hoverSound" preload="none">
-    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ" type="audio/wav">
-  </audio>
-
-  <audio id="moveSound" preload="none">
-    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ" type="audio/wav">
-  </audio>
-
-  <audio id="catSound" preload="none">
-    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ" type="audio/wav">
-  </audio>
-
-  <audio id="revealSound" preload="none">
-    <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ" type="audio/wav">
-  </audio>
-
   <script>
     const button = document.getElementById('trickButton');
     const message = document.getElementById('message');
     const soundToggle = document.getElementById('soundToggle');
     const audioPrompt = document.getElementById('audioPrompt');
     
-    // Get audio elements
-    const bgAmbiance = document.getElementById('bgAmbiance');
-    const hoverSound = document.getElementById('hoverSound');
-    const moveSound = document.getElementById('moveSound');
-    const catSound = document.getElementById('catSound');
-    const revealSound = document.getElementById('revealSound');
-    
     let moveCount = 0;
     const maxMoves = 5;
     let soundsEnabled = false;
     let audioUnlocked = false;
-
-    // Create Web Audio API context for generating sounds
     let audioContext;
-    let backgroundOscillator;
-    
-    // Generate a creepy background drone
-    function createBackgroundSound() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let backgroundNoise;
+
+    // Create subtle white noise for background
+    function createBackgroundNoise() {
+      if (!audioContext || !soundsEnabled) return null;
+      
+      // Create a buffer with white noise
+      const bufferSize = audioContext.sampleRate * 2; // 2 seconds of buffer
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const output = buffer.getChannelData(0);
+      
+      // Fill buffer with filtered noise (more like gentle rain)
+      for (let i = 0; i < bufferSize; i++) {
+        // Create filtered noise (lower frequencies only)
+        output[i] = (Math.random() * 2 - 1) * 0.5;
+        
+        // Apply low-pass filter by averaging with previous samples
+        if (i > 3) {
+          output[i] = (output[i] + output[i-1] * 0.3 + output[i-2] * 0.2 + output[i-3] * 0.1) / 1.6;
+        }
       }
       
-      // Create a low-frequency oscillator for background drone
-      const oscillator = audioContext.createOscillator();
+      // Create source and gain node
+      const noiseSource = audioContext.createBufferSource();
       const gainNode = audioContext.createGain();
       
-      oscillator.type = 'sawtooth';
-      oscillator.frequency.setValueAtTime(60, audioContext.currentTime);
+      noiseSource.buffer = buffer;
+      noiseSource.loop = true;
       
-      // Add some randomness to make it creepy
-      const lfo = audioContext.createOscillator();
-      const lfoGain = audioContext.createGain();
+      // Very quiet gain
+      gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
       
-      lfo.frequency.value = 0.3;
-      lfoGain.gain.value = 10;
-      
-      lfo.connect(lfoGain);
-      lfoGain.connect(oscillator.frequency);
-      
-      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-      
-      oscillator.connect(gainNode);
+      // Connect
+      noiseSource.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      oscillator.start();
-      lfo.start();
+      noiseSource.start();
       
-      backgroundOscillator = { oscillator, gainNode, lfo };
-      
-      return gainNode;
+      return { noiseSource, gainNode };
     }
-    
-    // Generate a cat hiss sound
+
+    // Create a gentle wind/rain sound
+    function createAtmosphericSound() {
+      if (!audioContext || !soundsEnabled) return null;
+      
+      // Create brown noise (softer than white noise)
+      const bufferSize = audioContext.sampleRate * 3;
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const output = buffer.getChannelData(0);
+      
+      let lastOut = 0.0;
+      for (let i = 0; i < bufferSize; i++) {
+        // Brown noise algorithm
+        const white = Math.random() * 2 - 1;
+        output[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = output[i];
+        output[i] *= 1.5; // Scale
+      }
+      
+      const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+      
+      source.buffer = buffer;
+      source.loop = true;
+      
+      // Very subtle volume
+      gainNode.gain.setValueAtTime(0.015, audioContext.currentTime);
+      
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      source.start();
+      
+      return { source, gainNode };
+    }
+
+    // Gentle cat purr sound
     function playCatSound() {
       if (!audioContext || !soundsEnabled || !audioUnlocked) return;
       
+      // Create oscillator for purr
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
-      oscillator.type = 'sawtooth';
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.5);
+      oscillator.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      // Gentle purr frequencies
+      oscillator.frequency.setValueAtTime(120, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.3);
+      oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 0.6);
+      
+      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.03, audioContext.currentTime + 0.3);
+      gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.6);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.9);
       
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
       oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.5);
+      oscillator.stop(audioContext.currentTime + 0.9);
     }
-    
-    // Generate a magical reveal sound
-    function playRevealSound() {
-      if (!audioContext || !soundsEnabled || !audioUnlocked) return;
-      
-      // Create multiple oscillators for a magical effect
-      for (let i = 0; i < 3; i++) {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.type = ['sine', 'triangle', 'sawtooth'][i];
-        oscillator.frequency.setValueAtTime(300 + i * 200, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(800 + i * 100, audioContext.currentTime + 0.3);
-        
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 1);
-      }
-    }
-    
-    // Generate a whoosh sound for hover
-    function playWhooshSound() {
+
+    // Soft magical twinkle for hover
+    function playHoverSound() {
       if (!audioContext || !soundsEnabled || !audioUnlocked) return;
       
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
-      oscillator.type = 'sawtooth';
-      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.2);
       
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.1);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
       
       oscillator.connect(gainNode);
@@ -452,19 +441,19 @@
       oscillator.start();
       oscillator.stop(audioContext.currentTime + 0.3);
     }
-    
-    // Generate a pop sound for movement
-    function playPopSound() {
+
+    // Subtle movement sound
+    function playMoveSound() {
       if (!audioContext || !soundsEnabled || !audioUnlocked) return;
       
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1);
+      oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
       
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
       
       oscillator.connect(gainNode);
@@ -472,6 +461,32 @@
       
       oscillator.start();
       oscillator.stop(audioContext.currentTime + 0.1);
+    }
+
+    // Mysterious reveal sound
+    function playRevealSound() {
+      if (!audioContext || !soundsEnabled || !audioUnlocked) return;
+      
+      // Create multiple gentle tones
+      for (let i = 0; i < 2; i++) {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.type = i === 0 ? 'sine' : 'triangle';
+        const baseFreq = i === 0 ? 300 : 450;
+        oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(baseFreq + 200, audioContext.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.2);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 1.5);
+      }
     }
 
     // Unlock audio
@@ -493,9 +508,9 @@
           soundsEnabled = true;
           updateAudioUI();
           
-          // Start background sound
+          // Start subtle atmospheric sound
           if (soundsEnabled) {
-            createBackgroundSound();
+            backgroundNoise = createAtmosphericSound();
           }
         }).catch(e => {
           console.log('Failed to resume audio context:', e);
@@ -506,9 +521,9 @@
         soundsEnabled = true;
         updateAudioUI();
         
-        // Start background sound
+        // Start subtle atmospheric sound
         if (soundsEnabled) {
-          createBackgroundSound();
+          backgroundNoise = createAtmosphericSound();
         }
       }
     }
@@ -525,8 +540,8 @@
         audioPrompt.classList.remove('show');
         
         // Stop background sound
-        if (backgroundOscillator) {
-          backgroundOscillator.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        if (backgroundNoise) {
+          backgroundNoise.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         }
       } else {
         soundToggle.textContent = '🔇';
@@ -545,16 +560,16 @@
       soundsEnabled = !soundsEnabled;
       
       if (soundsEnabled) {
-        // Start or resume background sound
-        if (!backgroundOscillator) {
-          createBackgroundSound();
+        // Start or resume atmospheric sound
+        if (!backgroundNoise) {
+          backgroundNoise = createAtmosphericSound();
         } else {
-          backgroundOscillator.gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+          backgroundNoise.gainNode.gain.setValueAtTime(0.015, audioContext.currentTime);
         }
       } else {
-        // Mute background sound
-        if (backgroundOscillator) {
-          backgroundOscillator.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        // Mute atmospheric sound
+        if (backgroundNoise) {
+          backgroundNoise.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         }
       }
       
@@ -573,9 +588,9 @@
       button.style.transform = `translate(${x}px, ${y}px)`;
       moveCount++;
       
-      // Play sounds
-      playPopSound();
-      setTimeout(() => playCatSound(), 100);
+      // Play subtle sounds
+      playMoveSound();
+      setTimeout(() => playCatSound(), 150);
       
       // Visual effects
       const cats = document.querySelector('.cats');
@@ -608,7 +623,7 @@
       // Button hover
       button.addEventListener('mouseenter', () => {
         if (moveCount < maxMoves) {
-          playWhooshSound();
+          playHoverSound();
           moveButton();
         }
       });
@@ -617,14 +632,14 @@
       button.addEventListener('touchstart', (e) => {
         e.preventDefault();
         unlockAudio();
-        playWhooshSound();
+        playHoverSound();
         moveButton();
         if (moveCount >= maxMoves) showMessage();
       }, { passive: false });
 
       button.addEventListener('click', () => {
         unlockAudio();
-        playWhooshSound();
+        playHoverSound();
         moveButton();
         if (moveCount >= maxMoves) showMessage();
       });
@@ -636,10 +651,8 @@
       audioPrompt.addEventListener('click', unlockAudio);
       
       // Unlock on any interaction
-      const unlockEvents = ['click', 'touchstart', 'keydown'];
-      unlockEvents.forEach(event => {
-        document.addEventListener(event, unlockAudio, { once: true });
-      });
+      document.addEventListener('click', unlockAudio, { once: true });
+      document.addEventListener('touchstart', unlockAudio, { once: true });
       
       // Show prompt after delay
       setTimeout(() => {
@@ -653,7 +666,7 @@
     setupEventListeners();
     updateAudioUI();
     
-    console.log('Gothic Cats initialized - All sounds are generated with Web Audio API');
+    console.log('Gothic Cats initialized - Subtle atmospheric sounds ready');
   </script>
 
 </body>
