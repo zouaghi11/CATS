@@ -25,6 +25,7 @@
       align-items: center;
       overflow: hidden;
       color: #eee;
+      cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="%23b48ead" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>') 16 16, auto;
     }
 
     /* indie gothic rain effect */
@@ -169,12 +170,17 @@
       cursor: pointer;
       z-index: 10;
       transition: all 0.3s ease;
+      font-size: 1.2rem;
     }
 
     .sound-indicator:hover {
       background: var(--violet);
       color: #000;
       transform: scale(1.1);
+    }
+
+    .sound-indicator.muted {
+      opacity: 0.7;
     }
 
     .sound-indicator.muted::after {
@@ -185,6 +191,33 @@
       background: var(--blood);
       transform: rotate(45deg);
       transform-origin: center;
+    }
+
+    /* Audio unlock prompt */
+    .audio-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      border: 1px solid var(--violet);
+      color: var(--violet);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      z-index: 100;
+      display: none;
+      animation: pulse 2s infinite;
+      text-align: center;
+    }
+
+    .audio-prompt.show {
+      display: block;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
 
     /* MESSAGE */
@@ -254,7 +287,8 @@
 
   <div class="rain"></div>
 
-  <div class="sound-indicator" id="soundToggle">🔊</div>
+  <div class="sound-indicator" id="soundToggle">🔇</div>
+  <div class="audio-prompt" id="audioPrompt">🔊 Click to enable sound</div>
 
   <div class="container">
     <h1>Gothic Cats</h1>
@@ -266,83 +300,113 @@
     <span>safa lmongol!!</span>
   </div>
 
-  <!-- Background ambiance - rain sounds -->
-  <audio id="bgAmbiance" loop preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-rain-loop-1243.mp3" type="audio/mpeg">
+  <!-- Base64 encoded fallback sounds for reliability -->
+  <audio id="bgAmbiance" loop>
+    <!-- Light rain sound encoded in base64 -->
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-1242.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Button hover sound -->
-  <audio id="hoverSound" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-mysterious-wind-329.mp3" type="audio/mpeg">
+  <!-- Sound effects -->
+  <audio id="hoverSound">
+    <!-- Creepy whoosh sound -->
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-creepy-whoosh-566.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Button move sound -->
-  <audio id="moveSound" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-ominous-ambient-576.mp3" type="audio/mpeg">
+  <audio id="moveSound">
+    <!-- Mysterious ambient sound -->
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-mysterious-ambient-668.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Cat meow sounds -->
-  <audio id="catSound1" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-cat-meow-221.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="catSound2" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-cat-angry-meow-224.mp3" type="audio/mpeg">
+  <audio id="catSound">
+    <!-- Creepy cat sound -->
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-creepy-cat-meow-222.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Final reveal sound -->
-  <audio id="revealSound" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-spooky-magic-echo-875.mp3" type="audio/mpeg">
+  <audio id="revealSound">
+    <!-- Magic spell sound -->
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-spell-677.mp3" type="audio/mpeg">
   </audio>
 
   <script>
     const button = document.getElementById('trickButton');
     const message = document.getElementById('message');
     const soundToggle = document.getElementById('soundToggle');
+    const audioPrompt = document.getElementById('audioPrompt');
     
     // Audio elements
     const bgAmbiance = document.getElementById('bgAmbiance');
     const hoverSound = document.getElementById('hoverSound');
     const moveSound = document.getElementById('moveSound');
-    const catSound1 = document.getElementById('catSound1');
-    const catSound2 = document.getElementById('catSound2');
+    const catSound = document.getElementById('catSound');
     const revealSound = document.getElementById('revealSound');
     
     let moveCount = 0;
     const maxMoves = 5;
-    let soundsEnabled = true;
-    let ambiancePlaying = false;
+    let soundsEnabled = false; // Start with sounds disabled until user interaction
+    let audioContext;
+    let audioUnlocked = false;
 
-    // Initialize audio
+    // Initialize audio context for better control
     function initAudio() {
-      if (!soundsEnabled) return;
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
       
       // Set volumes
-      bgAmbiance.volume = 0.2;
+      bgAmbiance.volume = 0.3;
       hoverSound.volume = 0.4;
       moveSound.volume = 0.3;
-      catSound1.volume = 0.5;
-      catSound2.volume = 0.5;
-      revealSound.volume = 0.7;
+      catSound.volume = 0.5;
+      revealSound.volume = 0.6;
       
-      // Start ambient rain sound
-      bgAmbiance.play().then(() => {
-        ambiancePlaying = true;
-      }).catch(() => {
-        // Autoplay might be blocked - will start on user interaction
+      // Try to unlock audio with user gesture
+      unlockAudio();
+    }
+
+    // Unlock audio with user interaction
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      
+      // Resume audio context if suspended
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
+      // Try to play a silent sound to unlock audio
+      const silentSound = new Audio();
+      silentSound.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ';
+      silentSound.volume = 0.001;
+      
+      silentSound.play().then(() => {
+        silentSound.pause();
+        audioUnlocked = true;
+        soundsEnabled = true;
+        soundToggle.textContent = '🔊';
+        soundToggle.classList.remove('muted');
+        audioPrompt.classList.remove('show');
+        
+        // Start ambient sound
+        bgAmbiance.play().catch(e => console.log('Ambiance play failed:', e));
+      }).catch(e => {
+        console.log('Audio unlock failed:', e);
+        audioPrompt.classList.add('show');
       });
     }
 
     // Toggle all sounds
     function toggleSounds() {
+      if (!audioUnlocked) {
+        unlockAudio();
+        return;
+      }
+      
       soundsEnabled = !soundsEnabled;
       
       if (soundsEnabled) {
         soundToggle.textContent = '🔊';
         soundToggle.classList.remove('muted');
-        bgAmbiance.volume = 0.2;
-        if (ambiancePlaying) {
-          bgAmbiance.play();
-        }
+        bgAmbiance.volume = 0.3;
+        bgAmbiance.play().catch(e => console.log('Play failed:', e));
       } else {
         soundToggle.textContent = '🔇';
         soundToggle.classList.add('muted');
@@ -352,16 +416,24 @@
 
     // Play sound with safety check
     function playSound(audioElement) {
-      if (!soundsEnabled) return;
+      if (!soundsEnabled || !audioUnlocked) return;
       
       try {
         // Reset and play
         audioElement.currentTime = 0;
-        audioElement.play().catch(() => {
-          // Silent fail if audio play is blocked
-        });
+        const playPromise = audioElement.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log('Sound play failed:', error);
+            // Try to unlock audio again
+            if (error.name === 'NotAllowedError') {
+              audioPrompt.classList.add('show');
+            }
+          });
+        }
       } catch (e) {
-        // Silent fail
+        console.log('Sound error:', e);
       }
     }
 
@@ -379,12 +451,10 @@
       // Play move sound (ominous ambient)
       playSound(moveSound);
       
-      // Play cat sound on some moves
-      if (moveCount % 2 === 0) {
-        playSound(catSound1);
-      } else {
-        playSound(catSound2);
-      }
+      // Play cat sound
+      setTimeout(() => {
+        playSound(catSound);
+      }, 100);
       
       // Add a subtle shake effect to the cats
       const cats = document.querySelector('.cats');
@@ -406,8 +476,16 @@
     function showMessage() {
       if (moveCount < maxMoves) return;
       
-      // Play reveal sound (spooky magic)
+      // Play reveal sound (magic spell)
       playSound(revealSound);
+      
+      // Stop ambient during reveal
+      bgAmbiance.pause();
+      setTimeout(() => {
+        if (soundsEnabled && audioUnlocked) {
+          bgAmbiance.play().catch(e => console.log('Resume failed:', e));
+        }
+      }, 2000);
       
       message.classList.add('show');
       setTimeout(() => message.classList.remove('show'), 1600);
@@ -421,15 +499,17 @@
       }
     });
 
-    // Mobile support
+    // Mobile and click support
     button.addEventListener('touchstart', e => {
       e.preventDefault();
+      unlockAudio();
       playSound(hoverSound);
       moveButton();
       if (moveCount >= maxMoves) showMessage();
     }, { passive: false });
 
     button.addEventListener('click', () => {
+      unlockAudio();
       playSound(hoverSound);
       moveButton();
       if (moveCount >= maxMoves) showMessage();
@@ -438,18 +518,20 @@
     // Sound toggle
     soundToggle.addEventListener('click', toggleSounds);
 
-    // Initialize audio on first user interaction
-    document.addEventListener('click', () => {
-      if (!ambiancePlaying && soundsEnabled) {
-        initAudio();
-      }
-    }, { once: true });
+    // Audio prompt click to enable
+    audioPrompt.addEventListener('click', unlockAudio);
 
-    document.addEventListener('touchstart', () => {
-      if (!ambiancePlaying && soundsEnabled) {
-        initAudio();
+    // Initialize audio on any user interaction
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+
+    // Show audio prompt after 2 seconds if still locked
+    setTimeout(() => {
+      if (!audioUnlocked) {
+        audioPrompt.classList.add('show');
       }
-    }, { once: true });
+    }, 2000);
 
     // Initialize audio settings
     initAudio();
