@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gothic Cats – Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Gothic Cats</title>
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@300&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@300&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -20,67 +20,78 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #120012, #000);
+      background: radial-gradient(circle at top, #140014, #000);
       color: #e0e0e0;
       font-family: 'Montserrat', sans-serif;
       overflow: hidden;
+      touch-action: manipulation;
     }
 
-    /* TERMINAL INTRO */
-    #terminal {
+    /* RAIN EFFECT */
+    .rain {
       position: fixed;
       inset: 0;
-      background: #000;
-      color: #33ff33;
-      font-family: 'VT323', monospace;
-      font-size: 1.2rem;
-      padding: 20px;
-      z-index: 10;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.06) 3px
+      );
+      animation: rain 0.35s linear infinite;
+      z-index: 1;
     }
 
-    #terminal.hidden { display: none; }
+    @keyframes rain {
+      from { background-position: 0 0; }
+      to { background-position: 0 100%; }
+    }
 
-    /* MAIN CONTAINER */
+    /* MAIN CARD */
     .container {
       position: relative;
       z-index: 2;
-      max-width: 90vw;
+      width: min(92vw, 420px);
       margin: auto;
       top: 50%;
       transform: translateY(-50%);
       text-align: center;
-      background: rgba(0, 0, 0, 0.65);
-      border: 1px solid #300030;
-      padding: 26px;
+      background: rgba(0, 0, 0, 0.68);
+      border: 1px solid #2a002a;
+      padding: 26px 20px 30px;
       border-radius: 22px;
       box-shadow: 0 0 50px rgba(120, 0, 120, 0.6);
+      backdrop-filter: blur(2px);
     }
 
     h1 {
       font-family: 'UnifrakturCook', cursive;
-      font-size: clamp(2.2rem, 7vw, 3.4rem);
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
       color: var(--violet);
       letter-spacing: 2px;
+      margin: 0 0 6px;
     }
 
     p {
-      opacity: 0.8;
-      margin-bottom: 20px;
+      opacity: 0.85;
+      margin: 0 0 18px;
+      font-size: clamp(0.9rem, 4vw, 1rem);
     }
 
-    /* CAT SPRITES */
     .cats {
       font-size: clamp(2rem, 7vw, 2.6rem);
-      margin-bottom: 20px;
-      animation: float 4s ease-in-out infinite;
+      margin-bottom: 18px;
+      animation: float 3.5s ease-in-out infinite;
     }
 
     @keyframes float {
-      50% { transform: translateY(-10px); }
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+      100% { transform: translateY(0); }
     }
 
     /* BUTTON */
     #trickButton {
+      position: relative;
       padding: 14px 30px;
       font-size: 1rem;
       border: 1px solid var(--blood);
@@ -88,17 +99,21 @@
       color: var(--blood);
       border-radius: 999px;
       cursor: pointer;
-      transition: 0.3s ease;
-      touch-action: manipulation;
+      transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #trickButton:active {
+      transform: scale(0.95);
     }
 
     #trickButton:hover {
       background: var(--blood);
       color: #000;
-      box-shadow: 0 0 25px rgba(139, 0, 0, 0.9);
+      box-shadow: 0 0 22px rgba(139, 0, 0, 0.9);
     }
 
-    /* MODAL GLITCH */
+    /* MODAL */
     .modal {
       position: fixed;
       inset: 0;
@@ -108,7 +123,8 @@
       align-items: center;
       opacity: 0;
       pointer-events: none;
-      z-index: 6;
+      transition: opacity 0.25s ease;
+      z-index: 5;
     }
 
     .modal.active {
@@ -118,9 +134,11 @@
 
     .modal-content {
       font-family: 'UnifrakturCook', cursive;
-      font-size: clamp(2.5rem, 9vw, 3.5rem);
+      font-size: clamp(2.4rem, 9vw, 3.4rem);
       color: var(--blood);
-      animation: glitch 1s infinite;
+      animation: glitch 0.9s infinite;
+      text-align: center;
+      padding: 0 16px;
     }
 
     @keyframes glitch {
@@ -131,124 +149,78 @@
       100% { text-shadow: 2px 2px #000; }
     }
 
-    /* RAIN */
-    .rain {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image: repeating-linear-gradient(
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,0.05) 3px
-      );
-      animation: rain 0.4s linear infinite;
-      z-index: 1;
-    }
-
-    @keyframes rain {
-      from { background-position: 0 0; }
-      to { background-position: 0 100%; }
-    }
-
-    /* CANDLES */
-    .candle {
-      position: fixed;
-      bottom: 0;
-      width: 14px;
-      height: 60px;
-      background: #eee;
-      border-radius: 4px;
-      box-shadow: inset 0 0 5px #999;
-      z-index: 2;
-    }
-
-    .flame {
-      position: absolute;
-      top: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 12px;
-      height: 18px;
-      background: orange;
-      border-radius: 50% 50% 50% 50%;
-      animation: flicker 0.2s infinite;
-    }
-
-    @keyframes flicker {
-      50% { opacity: 0.6; transform: translateX(-50%) scale(0.9); }
+    /* MOBILE SAFE HEIGHT */
+    @supports (height: 100dvh) {
+      body { min-height: 100dvh; }
     }
   </style>
 </head>
 <body>
 
-  <!-- TERMINAL -->
-  <div id="terminal"></div>
-
-  <!-- EFFECTS -->
   <div class="rain"></div>
-  <div class="candle" style="left: 20px"><div class="flame"></div></div>
-  <div class="candle" style="right: 20px"><div class="flame"></div></div>
 
-  <!-- MAIN -->
   <div class="container">
     <h1>Gothic Cats</h1>
-    <p>vampire indie • midnight rain • cursed paws</p>
+    <p>midnight rain • cursed paws • indie darkness</p>
     <div class="cats">🐈‍⬛ 🩸 🐈‍⬛</div>
     <button id="trickButton">Touch the curse</button>
   </div>
 
-  <!-- MODAL -->
   <div class="modal" id="modal">
     <div class="modal-content">safa lmongol!!</div>
   </div>
 
-  <!-- AUDIO -->
-  <audio id="bgMusic" loop>
+  <!-- AUDIO (must start from user gesture on mobile) -->
+  <audio id="bgMusic" loop preload="auto">
     <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_2b9c8cce5f.mp3" type="audio/mpeg">
   </audio>
 
   <script>
-    /* TERMINAL TYPING */
-    const terminal = document.getElementById('terminal');
-    const lines = [
-      '> booting gothic-cat-os...',
-      '> loading darkness modules...',
-      '> summoning cats...',
-      '> system ready.'
-    ];
-    let i = 0;
-
-    function typeLine() {
-      if (i < lines.length) {
-        terminal.innerHTML += lines[i] + '<br>';
-        i++;
-        setTimeout(typeLine, 700);
-      } else {
-        setTimeout(() => terminal.classList.add('hidden'), 800);
-      }
-    }
-    typeLine();
-
-    /* BUTTON */
     const button = document.getElementById('trickButton');
     const modal = document.getElementById('modal');
     const music = document.getElementById('bgMusic');
+    let audioUnlocked = false;
 
-    const moveButton = () => {
-      const x = Math.random() * 200 - 100;
-      const y = Math.random() * 150 - 75;
+    function unlockAudio() {
+      if (!audioUnlocked) {
+        music.volume = 0.6;
+        music.play().then(() => {
+          music.pause();
+          music.currentTime = 0;
+          audioUnlocked = true;
+        }).catch(() => {});
+      }
+    }
+
+    function moveButton() {
+      const maxX = window.innerWidth * 0.35;
+      const maxY = window.innerHeight * 0.25;
+      const x = Math.random() * maxX - maxX / 2;
+      const y = Math.random() * maxY - maxY / 2;
       button.style.transform = `translate(${x}px, ${y}px)`;
-    };
+    }
+
+    // MOBILE + DESKTOP
+    button.addEventListener('touchstart', e => {
+      e.preventDefault();
+      unlockAudio();
+      moveButton();
+    }, { passive: false });
 
     button.addEventListener('mouseenter', moveButton);
-    button.addEventListener('touchstart', moveButton);
 
     button.addEventListener('click', () => {
+      unlockAudio();
+      music.play().catch(() => {});
       modal.classList.add('active');
-      music.play().catch(()=>{});
-      setTimeout(() => modal.classList.remove('active'), 1600);
+      setTimeout(() => modal.classList.remove('active'), 1500);
     });
+
+    // Unlock audio on any first interaction (mobile safe)
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
   </script>
 
 </body>
 </html>
+
