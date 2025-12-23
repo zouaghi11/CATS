@@ -2,424 +2,186 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gothic Cats</title>
-  
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
-  
+
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --blood: #8b0000;
+      --blood: #9b0000;
       --violet: #b48ead;
-      --dark: #050505;
     }
-    
-    * { 
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #140014, #000);
-      color: #e0e0e0;
+      background: radial-gradient(circle at top, #1b001b, #000);
       font-family: 'Montserrat', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       overflow: hidden;
-      touch-action: manipulation;
+      color: #eee;
     }
-    
-    /* RAIN EFFECT */
-    .rain {
+
+    /* subtle rain texture */
+    body::before {
+      content: "";
       position: fixed;
       inset: 0;
-      pointer-events: none;
-      background-image: repeating-linear-gradient(
+      background: repeating-linear-gradient(
         transparent,
         transparent 2px,
-        rgba(255,255,255,0.06) 3px
+        rgba(255,255,255,0.05) 3px
       );
-      animation: rain 0.35s linear infinite;
-      z-index: 1;
+      animation: rain 0.5s linear infinite;
+      pointer-events: none;
     }
-    
+
     @keyframes rain {
       from { background-position: 0 0; }
       to { background-position: 0 100%; }
     }
-    
-    /* MAIN CARD */
+
     .container {
-      position: relative;
-      z-index: 2;
-      width: min(92vw, 420px);
-      margin: auto;
-      top: 50%;
-      transform: translateY(-50%);
+      width: min(90vw, 380px);
+      background: rgba(0,0,0,0.7);
+      border-radius: 20px;
+      padding: 24px 20px 30px;
       text-align: center;
-      background: rgba(0, 0, 0, 0.68);
-      border: 1px solid #2a002a;
-      padding: 26px 20px 30px;
-      border-radius: 22px;
-      box-shadow: 0 0 50px rgba(120, 0, 120, 0.6);
-      backdrop-filter: blur(2px);
+      box-shadow: 0 0 40px rgba(180,0,180,0.4);
     }
-    
+
     h1 {
       font-family: 'UnifrakturCook', cursive;
-      font-size: clamp(2.2rem, 8vw, 3.2rem);
       color: var(--violet);
-      letter-spacing: 2px;
-      margin: 0 0 10px;
-      text-shadow: 0 0 10px rgba(180, 142, 173, 0.3);
+      font-size: clamp(2rem, 8vw, 3rem);
+      margin: 0 0 8px;
     }
-    
+
     p {
       opacity: 0.85;
-      margin: 0 0 18px;
-      font-size: clamp(0.9rem, 4vw, 1rem);
-      line-height: 1.5;
+      margin-bottom: 18px;
+      font-size: 0.95rem;
     }
-    
+
     .cats {
-      font-size: clamp(2rem, 7vw, 2.6rem);
-      margin: 20px 0;
-      animation: float 3.5s ease-in-out infinite;
+      font-size: 2.2rem;
+      margin-bottom: 18px;
+      animation: float 3s ease-in-out infinite;
     }
-    
+
     @keyframes float {
-      0% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-12px) rotate(1deg); }
-      100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px); }
     }
-    
-    /* BUTTON */
+
     #trickButton {
-      position: relative;
-      padding: 14px 30px;
+      display: inline-block;
+      padding: 14px 32px;
       font-size: 1rem;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 400;
-      border: 1px solid var(--blood);
-      background: transparent;
-      color: var(--blood);
       border-radius: 999px;
+      border: none;
+      background: var(--blood);
+      color: #000;
+      box-shadow: 0 0 18px rgba(155,0,0,0.8);
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: transform 0.3s ease;
       -webkit-tap-highlight-color: transparent;
-      outline: none;
     }
-    
+
     #trickButton:active {
       transform: scale(0.95);
     }
-    
-    #trickButton:hover {
-      background: var(--blood);
-      color: #000;
-      box-shadow: 0 0 22px rgba(139, 0, 0, 0.9);
-    }
-    
-    /* LOADING INDICATOR */
-    .loading {
-      display: none;
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: var(--violet);
-      font-size: 0.9rem;
-      z-index: 10;
-    }
-    
-    .loading.active {
-      display: block;
-    }
-    
-    /* MODAL */
-    .modal {
+
+    /* MESSAGE */
+    .message {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.95);
       display: flex;
       justify-content: center;
       align-items: center;
+      background: rgba(0,0,0,0.85);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
-      z-index: 100;
     }
-    
-    .modal.active {
+
+    .message.show {
       opacity: 1;
       pointer-events: all;
     }
-    
-    .modal-content {
+
+    .message span {
       font-family: 'UnifrakturCook', cursive;
-      font-size: clamp(2.4rem, 9vw, 3.4rem);
+      font-size: clamp(2.4rem, 9vw, 3.2rem);
       color: var(--blood);
-      animation: glitch 0.9s infinite;
-      text-align: center;
-      padding: 0 16px;
-      text-shadow: 0 0 20px rgba(139, 0, 0, 0.7);
+      text-shadow: 0 0 20px rgba(155,0,0,0.9);
+      animation: pulse 1s infinite;
     }
-    
-    @keyframes glitch {
-      0% { 
-        transform: translate(0);
-        text-shadow: 2px 2px 0 #000, -2px -2px 0 #300000;
-      }
-      25% { 
-        transform: translate(-2px, 2px);
-        text-shadow: -2px -2px 0 #300000, 2px 2px 0 #000;
-      }
-      50% { 
-        transform: translate(2px, -1px);
-        text-shadow: 2px -2px 0 #8b0000, -2px 2px 0 #200000;
-      }
-      75% { 
-        transform: translate(-1px, -2px);
-        text-shadow: -2px 2px 0 #200000, 2px -2px 0 #8b0000;
-      }
-      100% { 
-        transform: translate(0);
-        text-shadow: 2px 2px 0 #000, -2px -2px 0 #300000;
-      }
-    }
-    
-    /* AUDIO CONTROLS */
-    .audio-controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 10;
-    }
-    
-    .audio-btn {
-      background: rgba(0, 0, 0, 0.7);
-      border: 1px solid var(--violet);
-      color: var(--violet);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      transition: all 0.3s ease;
-    }
-    
-    .audio-btn:hover {
-      background: var(--violet);
-      color: #000;
-    }
-    
-    /* MOBILE SAFE HEIGHT */
-    @supports (height: 100dvh) {
-      body { min-height: 100dvh; }
-    }
-    
-    @media (max-width: 480px) {
-      .container {
-        padding: 20px 15px;
-      }
-      
-      .audio-controls {
-        bottom: 10px;
-        right: 10px;
-      }
+
+    @keyframes pulse {
+      50% { transform: scale(1.05); }
     }
   </style>
 </head>
 <body>
-  
-  <div class="rain"></div>
-  
-  <div class="loading" id="loading">Loading audio...</div>
-  
+
   <div class="container">
     <h1>Gothic Cats</h1>
-    <p>midnight rain • cursed paws • indie darkness</p>
+    <p>indie • gothic • cursed</p>
     <div class="cats">🐈‍⬛ 🩸 🐈‍⬛</div>
-    <button id="trickButton" aria-label="Reveal the curse">Touch the curse</button>
+    <button id="trickButton">Touch the curse</button>
   </div>
-  
-  <div class="modal" id="modal">
-    <div class="modal-content">Nine Lives, One Curse</div>
+
+  <div class="message" id="message">
+    <span>safa lmongol!!</span>
   </div>
-  
-  <div class="audio-controls">
-    <button class="audio-btn" id="audioToggle" aria-label="Toggle music">♪</button>
-  </div>
-  
-  <!-- AUDIO (updated to a more reliable source) -->
-  <audio id="bgMusic" loop preload="none">
-    <source src="https://assets.codepen.io/1468070/creepy-atmosphere-ambient-version-60s-14532.mp3" type="audio/mpeg">
-    <source src="https://assets.codepen.io/1468070/creepy-atmosphere-ambient-version-60s-14532.ogg" type="audio/ogg">
+
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_2b9c8cce5f.mp3" type="audio/mpeg">
   </audio>
-  
+
   <script>
     const button = document.getElementById('trickButton');
-    const modal = document.getElementById('modal');
+    const message = document.getElementById('message');
     const music = document.getElementById('bgMusic');
-    const loading = document.getElementById('loading');
-    const audioToggle = document.getElementById('audioToggle');
-    
-    let audioUnlocked = false;
-    let audioPlaying = false;
+
     let moveCount = 0;
-    const maxMoves = 3; // Limit button movements
-    
-    // Preload audio with user interaction
-    function initAudio() {
-      if (!audioUnlocked) {
-        loading.classList.add('active');
-        
-        // Set up audio
-        music.volume = 0.4;
-        music.preload = 'auto';
-        
-        // Try to play/pause to unlock
-        const playPromise = music.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            music.pause();
-            music.currentTime = 0;
-            audioUnlocked = true;
-            loading.classList.remove('active');
-          }).catch(error => {
-            console.log('Audio play failed:', error);
-            loading.textContent = 'Tap to enable audio';
-            loading.classList.add('active');
-          });
-        }
-      }
-    }
-    
-    // Move button randomly (with limits)
+    const maxMoves = 5;
+
     function moveButton() {
-      if (moveCount >= maxMoves) {
-        button.textContent = "Enough! Click me";
-        button.style.pointerEvents = 'auto';
-        return;
-      }
-      
-      moveCount++;
-      const maxX = window.innerWidth * 0.3;
+      if (moveCount >= maxMoves) return;
+
+      const maxX = window.innerWidth * 0.25;
       const maxY = window.innerHeight * 0.2;
-      const x = (Math.random() * maxX - maxX / 2);
-      const y = (Math.random() * maxY - maxY / 2);
-      button.style.transform = `translate(${x}px, ${y}px) scale(0.95)`;
-      
-      // Reset position after last move
-      if (moveCount === maxMoves) {
-        setTimeout(() => {
-          button.style.transform = 'translate(0, 0) scale(1)';
-        }, 300);
-      }
+      const x = Math.random() * maxX - maxX / 2;
+      const y = Math.random() * maxY - maxY / 2;
+
+      button.style.transform = `translate(${x}px, ${y}px)`;
+      moveCount++;
     }
-    
-    // Handle button click/reveal
-    function revealCurse() {
-      // Reset button position
-      button.style.transform = 'translate(0, 0)';
-      
-      // Play music if unlocked
-      if (audioUnlocked && !audioPlaying) {
-        music.play().then(() => {
-          audioPlaying = true;
-          audioToggle.textContent = '♫';
-        }).catch(() => {
-          // If autoplay fails, show instruction
-          loading.textContent = 'Tap to enable audio';
-          loading.classList.add('active');
-        });
-      }
-      
-      // Show modal
-      modal.classList.add('active');
-      
-      // Hide modal after delay
-      setTimeout(() => {
-        modal.classList.remove('active');
-      }, 2000);
+
+    function showMessage() {
+      music.play().catch(()=>{});
+      message.classList.add('show');
+      setTimeout(() => message.classList.remove('show'), 1600);
     }
-    
-    // Event Listeners
-    button.addEventListener('click', revealCurse);
-    
-    // Desktop hover effect
-    button.addEventListener('mouseenter', (e) => {
-      if (moveCount < maxMoves) {
-        moveButton();
-      }
-    });
-    
-    // Touch events for mobile
-    button.addEventListener('touchstart', (e) => {
+
+    // MOBILE + DESKTOP SUPPORT
+    button.addEventListener('touchstart', e => {
       e.preventDefault();
-      if (moveCount < maxMoves) {
-        moveButton();
-      }
+      moveButton();
+      if (moveCount >= maxMoves) showMessage();
     }, { passive: false });
-    
-    // Audio toggle
-    audioToggle.addEventListener('click', () => {
-      if (!audioUnlocked) {
-        initAudio();
-        return;
-      }
-      
-      if (audioPlaying) {
-        music.pause();
-        audioPlaying = false;
-        audioToggle.textContent = '♪';
-      } else {
-        music.play().then(() => {
-          audioPlaying = true;
-          audioToggle.textContent = '♫';
-        });
-      }
-    });
-    
-    // Initialize audio on first user interaction
-    document.addEventListener('click', () => {
-      if (!audioUnlocked) {
-        initAudio();
-      }
-    }, { once: true });
-    
-    document.addEventListener('touchstart', () => {
-      if (!audioUnlocked) {
-        initAudio();
-      }
-    }, { once: true });
-    
-    // Handle page visibility changes
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && audioPlaying) {
-        music.pause();
-      } else if (!document.hidden && audioPlaying) {
-        music.play().catch(() => {
-          // Autoplay might be blocked when returning to tab
-          audioPlaying = false;
-          audioToggle.textContent = '♪';
-        });
-      }
-    });
-    
-    // Preload cat emojis to prevent flash
-    window.addEventListener('load', () => {
-      // Ensure container is properly centered on load
-      const container = document.querySelector('.container');
-      container.style.opacity = '1';
+
+    button.addEventListener('click', () => {
+      moveButton();
+      if (moveCount >= maxMoves) showMessage();
     });
   </script>
-  
+
 </body>
 </html>
