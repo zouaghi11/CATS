@@ -1,723 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gothic Cats</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gothic Cats</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blood: #9b0000;
+  --violet: #b48ead;
+}
 
-  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@400&display=swap" rel="stylesheet">
+* { box-sizing: border-box; }
 
-  <style>
-    :root {
-      --blood: #9b0000;
-      --violet: #b48ead;
-    }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top,#1b001b,#000);
+  font-family: 'Montserrat', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  color: #eee;
+}
 
-    * { box-sizing: border-box; }
+/* Gothic rain effect */
+.rain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.rain::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  background: repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(180,142,173,.03) 21px,transparent 22px),
+              repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(139,0,0,.08) 3px,transparent 4px);
+  animation: rainFall .8s linear infinite;
+}
+.rain::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 30% 20%,rgba(155,0,0,.15) 0%,transparent 50%);
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+@keyframes rainFall { from{transform:translateY(-100%)} to{transform:translateY(100%)} }
+@keyframes pulseGlow { 0%,100%{opacity:.3} 50%{opacity:.7} }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #1b001b, #000);
-      font-family: 'Montserrat', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      color: #eee;
-    }
+.container {
+  width:min(90vw,380px);
+  background: rgba(0,0,0,.75);
+  border-radius: 20px;
+  padding: 24px 20px 30px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(180,0,180,.5), inset 0 0 20px rgba(0,0,0,.5);
+  position: relative;
+  z-index: 2;
+  border:1px solid rgba(180,142,173,.1);
+}
 
-    /* Chromosome rain container */
-    .chromosome-rain {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1;
-    }
+h1 {
+  font-family: 'UnifrakturCook', cursive;
+  color: var(--violet);
+  font-size: clamp(2rem,8vw,3rem);
+  margin:0 0 24px;
+  text-shadow: 0 0 10px rgba(180,142,173,.5),0 0 20px rgba(180,142,173,.2);
+  letter-spacing:1px;
+}
 
-    /* Individual chromosome */
-    .chromosome {
-      position: absolute;
-      top: -50px;
-      width: 12px;
-      height: 25px;
-      background: linear-gradient(to bottom, transparent, var(--violet), transparent);
-      opacity: 0.3;
-      animation: fall linear infinite;
-    }
+.cats {
+  font-size: 2.2rem;
+  margin:0 0 24px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(155,0,0,.5));
+}
+@keyframes float {0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 
-    /* Create the X-shape of chromosomes */
-    .chromosome::before,
-    .chromosome::after {
-      content: '';
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: var(--blood);
-      border-radius: 50%;
-    }
+#trickButton {
+  display:inline-block;
+  padding:14px 32px;
+  font-size:.9rem;
+  border-radius:999px;
+  border:none;
+  background:linear-gradient(145deg,var(--blood),#7a0000);
+  color:#000;
+  font-weight:bold;
+  box-shadow:0 0 20px rgba(155,0,0,.8),inset 0 1px 0 rgba(255,255,255,.2);
+  cursor:pointer;
+  transition: all .3s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 2;
+  text-transform: uppercase;
+  letter-spacing:.5px;
+}
+#trickButton:hover { background:linear-gradient(145deg,#cc0000,var(--blood)); box-shadow:0 0 30px rgba(155,0,0,1) }
+#trickButton:active { transform: scale(.95); box-shadow:0 0 10px rgba(155,0,0,.6) }
 
-    .chromosome::before {
-      top: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+.sound-indicator {
+  position:fixed; top:20px; right:20px;
+  width:40px; height:40px;
+  background: rgba(0,0,0,.7);
+  border:1px solid var(--violet);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  color: var(--violet);
+  cursor:pointer;
+  z-index:10;
+  transition: all .3s ease;
+  font-size:1.2rem;
+}
+.sound-indicator:hover { background: var(--violet); color:#000; transform: scale(1.1); }
+.sound-indicator.muted { opacity:.7; }
+.sound-indicator.muted::after {
+  content:""; position:absolute;
+  width:2px; height:50px;
+  background: var(--blood);
+  transform: rotate(45deg); transform-origin:center;
+}
 
-    .chromosome::after {
-      bottom: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+.audio-prompt {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background: rgba(0,0,0,.9); border:1px solid var(--violet);
+  color: var(--violet); padding:12px 24px; border-radius:10px;
+  font-size:.9rem; z-index:100; text-align:center; box-shadow:0 0 20px rgba(180,142,173,.3);
+  display:none; animation: fadeInOut 2s infinite;
+}
+.audio-prompt.show { display:block; }
+@keyframes fadeInOut { 0%,100%{opacity:.7;transform:translateX(-50%) translateY(0)} 50%{opacity:1;transform:translateX(-50%) translateY(-5px)} }
 
-    /* Add arms to the chromosome */
-    .chromosome .arm {
-      position: absolute;
-      width: 1.5px;
-      height: 15px;
-      background: var(--violet);
-      opacity: 0.6;
-    }
-
-    .chromosome .arm.top {
-      top: 0;
-    }
-
-    .chromosome .arm.bottom {
-      bottom: 0;
-    }
-
-    .chromosome .arm.left {
-      left: -6px;
-      transform: rotate(30deg);
-    }
-
-    .chromosome .arm.right {
-      right: -6px;
-      transform: rotate(-30deg);
-    }
-
-    @keyframes fall {
-      to {
-        transform: translateY(100vh) rotate(360deg);
-      }
-    }
-
-    /* Subtle overlay for depth */
-    .rain-overlay {
-      position: fixed;
-      inset: 0;
-      background: 
-        repeating-linear-gradient(
-          90deg,
-          transparent,
-          transparent 20px,
-          rgba(180, 142, 173, 0.01) 21px,
-          transparent 22px
-        ),
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 2px,
-          rgba(139, 0, 0, 0.03) 3px,
-          transparent 4px
-        );
-      animation: rainFall 0.8s linear infinite;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    @keyframes rainFall {
-      from { transform: translateY(-100%); }
-      to { transform: translateY(100%); }
-    }
-
-    /* Pulse glow effect */
-    .glow {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(
-        circle at 30% 20%,
-        rgba(155, 0, 0, 0.08) 0%,
-        transparent 50%
-      );
-      animation: pulseGlow 4s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 0.4; }
-    }
-
-    .container {
-      width: min(90vw, 380px);
-      background: rgba(0,0,0,0.75);
-      border-radius: 20px;
-      padding: 24px 20px 30px;
-      text-align: center;
-      box-shadow: 
-        0 0 40px rgba(180,0,180,0.5),
-        inset 0 0 20px rgba(0,0,0,0.5);
-      position: relative;
-      z-index: 3;
-      border: 1px solid rgba(180, 142, 173, 0.1);
-    }
-
-    h1 {
-      font-family: 'UnifrakturCook', cursive;
-      color: var(--violet);
-      font-size: clamp(2rem, 8vw, 3rem);
-      margin: 0 0 24px;
-      text-shadow: 
-        0 0 10px rgba(180, 142, 173, 0.5),
-        0 0 20px rgba(180, 142, 173, 0.2);
-      letter-spacing: 1px;
-    }
-
-    .cats {
-      font-size: 2.2rem;
-      margin: 0 0 24px;
-      animation: float 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 8px rgba(155, 0, 0, 0.5));
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-12px) rotate(0.5deg); }
-    }
-
-    #trickButton {
-      display: inline-block;
-      padding: 14px 32px;
-      font-size: 1rem;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(145deg, var(--blood), #7a0000);
-      color: #000;
-      font-weight: bold;
-      box-shadow: 
-        0 0 20px rgba(155,0,0,0.8),
-        inset 0 1px 0 rgba(255,255,255,0.2);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      -webkit-tap-highlight-color: transparent;
-      position: relative;
-      z-index: 2;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      font-size: 0.9rem;
-    }
-
-    #trickButton:active {
-      transform: scale(0.95);
-      box-shadow: 
-        0 0 10px rgba(155,0,0,0.6),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-    }
-
-    #trickButton:hover {
-      background: linear-gradient(145deg, #cc0000, var(--blood));
-      box-shadow: 
-        0 0 30px rgba(155,0,0,1),
-        inset 0 1px 0 rgba(255,255,255,0.3);
-    }
-
-    /* Sound indicator */
-    .sound-indicator {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid var(--violet);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--violet);
-      cursor: pointer;
-      z-index: 10;
-      transition: all 0.3s ease;
-      font-size: 1.2rem;
-    }
-
-    .sound-indicator:hover {
-      background: var(--violet);
-      color: #000;
-      transform: scale(1.1);
-    }
-
-    .sound-indicator.muted {
-      opacity: 0.7;
-    }
-
-    .sound-indicator.muted::after {
-      content: "";
-      position: absolute;
-      width: 2px;
-      height: 50px;
-      background: var(--blood);
-      transform: rotate(45deg);
-      transform-origin: center;
-    }
-
-    /* Audio unlock prompt */
-    .audio-prompt {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.9);
-      border: 1px solid var(--violet);
-      color: var(--violet);
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      z-index: 100;
-      text-align: center;
-      box-shadow: 0 0 20px rgba(180, 142, 173, 0.3);
-      animation: fadeInOut 2s infinite;
-      display: none;
-    }
-
-    .audio-prompt.show {
-      display: block;
-    }
-
-    @keyframes fadeInOut {
-      0%, 100% { 
-        opacity: 0.7;
-        transform: translateX(-50%) translateY(0);
-      }
-      50% { 
-        opacity: 1;
-        transform: translateX(-50%) translateY(-5px);
-      }
-    }
-
-    /* MESSAGE */
-    .message {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: rgba(0,0,0,0.95);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 100;
-    }
-
-    .message.show {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .message span {
-      font-family: 'UnifrakturCook', cursive;
-      font-size: clamp(2.4rem, 9vw, 3.2rem);
-      color: var(--blood);
-      text-shadow: 
-        0 0 30px rgba(155,0,0,0.9),
-        0 0 60px rgba(155,0,0,0.6);
-      animation: glitch 0.8s infinite;
-    }
-
-    @keyframes glitch {
-      0% { 
-        transform: translate(0);
-        text-shadow: 
-          2px 2px 0 #000, 
-          -1px -1px 0 rgba(155,0,0,0.5);
-      }
-      25% { 
-        transform: translate(-1px, 1px);
-        text-shadow: 
-          -1px -1px 0 rgba(155,0,0,0.5), 
-          1px 1px 0 #000;
-      }
-      50% { 
-        transform: translate(1px, -1px);
-        text-shadow: 
-          1px -1px 0 rgba(255,0,0,0.3), 
-          -1px 1px 0 rgba(100,0,0,0.3);
-      }
-      75% { 
-        transform: translate(-1px, -1px);
-        text-shadow: 
-          -1px 1px 0 rgba(100,0,0,0.3), 
-          1px -1px 0 rgba(255,0,0,0.3);
-      }
-      100% { 
-        transform: translate(0);
-        text-shadow: 
-          2px 2px 0 #000, 
-          -1px -1px 0 rgba(155,0,0,0.5);
-      }
-    }
-  </style>
+.message {
+  position: fixed; inset:0;
+  display:flex; justify-content:center; align-items:center;
+  background: rgba(0,0,0,.95);
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .3s ease;
+  z-index:100;
+}
+.message.show { opacity:1; pointer-events:all; }
+.message span {
+  font-family: 'UnifrakturCook', cursive;
+  font-size: clamp(2.4rem,9vw,3.2rem);
+  color: var(--blood);
+  text-shadow:0 0 30px rgba(155,0,0,.9),0 0 60px rgba(155,0,0,.6);
+  animation: glitch .8s infinite;
+}
+@keyframes glitch {
+  0%{transform:translate(0);text-shadow:2px 2px 0 #000,-1px -1px 0 rgba(155,0,0,.5)}
+  25%{transform:translate(-1px,1px);text-shadow:-1px -1px 0 rgba(155,0,0,.5),1px 1px 0 #000}
+  50%{transform:translate(1px,-1px);text-shadow:1px -1px 0 rgba(255,0,0,.3),-1px 1px 0 rgba(100,0,0,.3)}
+  75%{transform:translate(-1px,-1px);text-shadow:-1px 1px 0 rgba(100,0,0,.3),1px -1px 0 rgba(255,0,0,.3)}
+  100%{transform:translate(0);text-shadow:2px 2px 0 #000,-1px -1px 0 rgba(155,0,0,.5)}
+}
+</style>
 </head>
 <body>
 
-  <div class="chromosome-rain" id="chromosomeRain"></div>
-  <div class="rain-overlay"></div>
-  <div class="glow"></div>
+<div class="rain"></div>
+<div class="sound-indicator muted" id="soundToggle">🔇</div>
+<div class="audio-prompt" id="audioPrompt">🔊 Click to enable sound</div>
 
-  <div class="sound-indicator muted" id="soundToggle">🔇</div>
-  <div class="audio-prompt" id="audioPrompt">🔊 Click to enable sound</div>
+<div class="container">
+  <h1>Gothic Cats</h1>
+  <div class="cats">🐈‍⬛ 🩸 🐈‍⬛</div>
+  <button id="trickButton">Touch the curse</button>
+</div>
 
-  <div class="container">
-    <h1>Gothic Cats</h1>
-    <div class="cats">🐈‍⬛ 🩸 🐈‍⬛</div>
-    <button id="trickButton">Touch the curse</button>
-  </div>
+<div class="message" id="message"><span>safa lmongol!!</span></div>
 
-  <div class="message" id="message">
-    <span>safa lmongol!!</span>
-  </div>
+<script>
+const button = document.getElementById('trickButton');
+const message = document.getElementById('message');
+const soundToggle = document.getElementById('soundToggle');
+const audioPrompt = document.getElementById('audioPrompt');
 
-  <script>
-    const button = document.getElementById('trickButton');
-    const message = document.getElementById('message');
-    const soundToggle = document.getElementById('soundToggle');
-    const audioPrompt = document.getElementById('audioPrompt');
-    const chromosomeRain = document.getElementById('chromosomeRain');
-    
-    let moveCount = 0;
-    const maxMoves = 5;
-    let soundsEnabled = false;
-    let audioUnlocked = false;
-    let audioContext;
-    let backgroundNoise;
+let moveCount = 0, maxMoves = 5, audioUnlocked = false, soundsEnabled = false, ctx, bgOsc;
 
-    // Create chromosome rain
-    function createChromosomeRain() {
-      const numChromosomes = 40;
-      
-      for (let i = 0; i < numChromosomes; i++) {
-        const chromosome = document.createElement('div');
-        chromosome.className = 'chromosome';
-        
-        // Random horizontal position
-        const left = Math.random() * 100;
-        chromosome.style.left = `${left}vw`;
-        
-        // Random animation duration (slower for larger, faster for smaller)
-        const size = 0.5 + Math.random() * 1;
-        chromosome.style.width = `${12 * size}px`;
-        chromosome.style.height = `${25 * size}px`;
-        
-        // Random animation duration and delay
-        const duration = 10 + Math.random() * 20;
-        const delay = Math.random() * 5;
-        chromosome.style.animationDuration = `${duration}s`;
-        chromosome.style.animationDelay = `${delay}s`;
-        
-        // Random opacity
-        chromosome.style.opacity = (0.1 + Math.random() * 0.2).toString();
-        
-        // Add arms to create X-shape
-        const arms = ['top left', 'top right', 'bottom left', 'bottom right'];
-        arms.forEach(position => {
-          const arm = document.createElement('div');
-          arm.className = `arm ${position}`;
-          chromosome.appendChild(arm);
-        });
-        
-        chromosomeRain.appendChild(chromosome);
-      }
-    }
+function unlockAudio() {
+  if(audioUnlocked) return;
+  if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state==='suspended') ctx.resume().then(()=>{startAudio();}).catch(()=>{audioPrompt.classList.add('show');});
+  else startAudio();
+}
 
-    // Create subtle white noise for background
-    function createBackgroundNoise() {
-      if (!audioContext || !soundsEnabled) return null;
-      
-      // Create a buffer with filtered noise
-      const bufferSize = audioContext.sampleRate * 3;
-      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      const output = buffer.getChannelData(0);
-      
-      // Create gentle brown noise
-      let lastOut = 0.0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + (0.02 * white)) / 1.02;
-        lastOut = output[i];
-        output[i] *= 1.5;
-      }
-      
-      const source = audioContext.createBufferSource();
-      const gainNode = audioContext.createGain();
-      
-      source.buffer = buffer;
-      source.loop = true;
-      
-      // Very subtle volume
-      gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
-      
-      source.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      source.start();
-      
-      return { source, gainNode };
-    }
+function startAudio(){
+  audioUnlocked=true;
+  soundsEnabled=true;
+  updateUI();
+  createBG();
+}
 
-    // Gentle cat purr sound
-    function playCatSound() {
-      if (!audioContext || !soundsEnabled || !audioUnlocked) return;
-      
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(120, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.3);
-      oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 0.6);
-      
-      gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.02, audioContext.currentTime + 0.3);
-      gainNode.gain.exponentialRampToValueAtTime(0.04, audioContext.currentTime + 0.6);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.9);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.9);
-    }
+function updateUI(){
+  soundToggle.textContent = soundsEnabled ? '🔊' : '🔇';
+  soundToggle.classList.toggle('muted',!soundsEnabled);
+  audioPrompt.classList.toggle('show',!audioUnlocked);
+}
 
-    // Soft magical twinkle for hover
-    function playHoverSound() {
-      if (!audioContext || !soundsEnabled || !audioUnlocked) return;
-      
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.type = 'triangle';
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.2);
-      
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.1);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.3);
-    }
+function toggleSounds(){
+  if(!audioUnlocked){ unlockAudio(); return; }
+  soundsEnabled = !soundsEnabled;
+  if(bgOsc) bgOsc.gain.setValueAtTime(soundsEnabled?.05:0, ctx.currentTime);
+  updateUI();
+}
 
-    // Subtle movement sound
-    function playMoveSound() {
-      if (!audioContext || !soundsEnabled || !audioUnlocked) return;
-      
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
-      
-      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.1);
-    }
+function createBG(){
+  bgOsc = ctx.createGain();
+  const osc = ctx.createOscillator();
+  osc.type='sawtooth';
+  osc.frequency.value=60;
+  osc.connect(bgOsc);
+  bgOsc.connect(ctx.destination);
+  bgOsc.gain.value=0.05;
+  osc.start(); osc.stop(ctx.currentTime+1000); // infinite
+}
 
-    // Mysterious reveal sound
-    function playRevealSound() {
-      if (!audioContext || !soundsEnabled || !audioUnlocked) return;
-      
-      for (let i = 0; i < 2; i++) {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.type = i === 0 ? 'sine' : 'triangle';
-        const baseFreq = i === 0 ? 300 : 450;
-        oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(baseFreq + 200, audioContext.currentTime + 0.5);
-        
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 0.2);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 1.5);
-      }
-    }
+function playPop(){ if(!audioUnlocked||!soundsEnabled) return; const osc=ctx.createOscillator(); const gain=ctx.createGain(); osc.type='sine'; osc.frequency.setValueAtTime(200,ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(50,ctx.currentTime+.1); gain.gain.setValueAtTime(.1,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.1); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+.1); }
+function playReveal(){ if(!audioUnlocked||!soundsEnabled) return; const osc=ctx.createOscillator(); const gain=ctx.createGain(); osc.type='triangle'; osc.frequency.setValueAtTime(400,ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(800,ctx.currentTime+.5); gain.gain.setValueAtTime(.1,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.5); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+.5); }
 
-    // Unlock audio
-    function unlockAudio() {
-      if (audioUnlocked) return;
-      
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      
-      if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-          audioUnlocked = true;
-          soundsEnabled = true;
-          updateAudioUI();
-          
-          if (soundsEnabled) {
-            backgroundNoise = createBackgroundNoise();
-          }
-        }).catch(e => {
-          audioPrompt.classList.add('show');
-        });
-      } else {
-        audioUnlocked = true;
-        soundsEnabled = true;
-        updateAudioUI();
-        
-        if (soundsEnabled) {
-          backgroundNoise = createBackgroundNoise();
-        }
-      }
-    }
+function moveButton(){
+  if(moveCount>=maxMoves) return;
+  const x = (Math.random()-0.5)*0.5*window.innerWidth;
+  const y = (Math.random()-0.5)*0.3*window.innerHeight;
+  button.style.transform=`translate(${x}px,${y}px)`;
+  moveCount++;
+  playPop();
+  const cats = document.querySelector('.cats');
+  cats.style.animation='none';
+  setTimeout(()=>cats.style.animation='float 3s ease-in-out infinite',100);
+  if(moveCount>=maxMoves){
+    setTimeout(()=>{button.textContent='Reveal Curse'; button.style.transform='translate(0,0)'; cats.style.filter='drop-shadow(0 0 15px rgba(155,0,0,.8))'},300);
+  }
+}
 
-    // Update audio UI
-    function updateAudioUI() {
-      if (audioUnlocked && soundsEnabled) {
-        soundToggle.textContent = '🔊';
-        soundToggle.classList.remove('muted');
-        audioPrompt.classList.remove('show');
-      } else if (audioUnlocked && !soundsEnabled) {
-        soundToggle.textContent = '🔇';
-        soundToggle.classList.add('muted');
-        audioPrompt.classList.remove('show');
-        
-        if (backgroundNoise) {
-          backgroundNoise.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        }
-      } else {
-        soundToggle.textContent = '🔇';
-        soundToggle.classList.add('muted');
-        audioPrompt.classList.add('show');
-      }
-    }
+function showMessage(){
+  if(moveCount<maxMoves) return;
+  playReveal();
+  message.classList.add('show');
+  setTimeout(()=>message.classList.remove('show'),1600);
+}
 
-    // Toggle sounds
-    function toggleSounds() {
-      if (!audioUnlocked) {
-        unlockAudio();
-        return;
-      }
-      
-      soundsEnabled = !soundsEnabled;
-      
-      if (soundsEnabled) {
-        if (!backgroundNoise) {
-          backgroundNoise = createBackgroundNoise();
-        } else {
-          backgroundNoise.gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
-        }
-      } else {
-        if (backgroundNoise) {
-          backgroundNoise.gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        }
-      }
-      
-      updateAudioUI();
-    }
+function setupEvents(){
+  button.addEventListener('mouseenter',()=>{ if(moveCount<maxMoves){ moveButton(); } });
+  button.addEventListener('touchstart', e=>{ e.preventDefault(); unlockAudio(); moveButton(); if(moveCount>=maxMoves) showMessage(); }, {passive:false});
+  button.addEventListener('click', ()=>{ unlockAudio(); moveButton(); if(moveCount>=maxMoves) showMessage(); });
+  soundToggle.addEventListener('click', toggleSounds);
+  audioPrompt.addEventListener('click', unlockAudio);
+  ['click','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{once:true}));
+  setTimeout(()=>{ if(!audioUnlocked) audioPrompt.classList.add('show'); },1000);
+}
 
-    // Move button logic
-    function moveButton() {
-      if (moveCount >= maxMoves) return;
-
-      const maxX = window.innerWidth * 0.25;
-      const maxY = window.innerHeight * 0.2;
-      const x = Math.random() * maxX - maxX / 2;
-      const y = Math.random() * maxY - maxY / 2;
-
-      button.style.transform = `translate(${x}px, ${y}px)`;
-      moveCount++;
-      
-      playMoveSound();
-      setTimeout(() => playCatSound(), 150);
-      
-      const cats = document.querySelector('.cats');
-      cats.style.animation = 'none';
-      setTimeout(() => {
-        cats.style.animation = 'float 3s ease-in-out infinite';
-      }, 100);
-      
-      if (moveCount >= maxMoves) {
-        setTimeout(() => {
-          button.textContent = "Reveal Curse";
-          button.style.transform = 'translate(0, 0)';
-          cats.style.filter = 'drop-shadow(0 0 15px rgba(155, 0, 0, 0.8))';
-        }, 300);
-      }
-    }
-
-    // Show message
-    function showMessage() {
-      if (moveCount < maxMoves) return;
-      
-      playRevealSound();
-      
-      message.classList.add('show');
-      setTimeout(() => message.classList.remove('show'), 1600);
-    }
-
-    // Setup event listeners
-    function setupEventListeners() {
-      button.addEventListener('mouseenter', () => {
-        if (moveCount < maxMoves) {
-          playHoverSound();
-          moveButton();
-        }
-      });
-
-      button.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        unlockAudio();
-        playHoverSound();
-        moveButton();
-        if (moveCount >= maxMoves) showMessage();
-      }, { passive: false });
-
-      button.addEventListener('click', () => {
-        unlockAudio();
-        playHoverSound();
-        moveButton();
-        if (moveCount >= maxMoves) showMessage();
-      });
-
-      soundToggle.addEventListener('click', toggleSounds);
-      audioPrompt.addEventListener('click', unlockAudio);
-      
-      document.addEventListener('click', unlockAudio, { once: true });
-      document.addEventListener('touchstart', unlockAudio, { once: true });
-      
-      setTimeout(() => {
-        if (!audioUnlocked) {
-          audioPrompt.classList.add('show');
-        }
-      }, 1000);
-    }
-
-    // Initialize chromosome rain
-    createChromosomeRain();
-    
-    // Setup everything
-    setupEventListeners();
-    updateAudioUI();
-  </script>
+setupEvents();
+updateUI();
+</script>
 
 </body>
 </html>
