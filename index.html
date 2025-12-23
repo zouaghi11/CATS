@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gothic Cats – Terminal</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@300&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --blood: #8b0000;
+      --violet: #b48ead;
+      --dark: #050505;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #120012, #000);
+      color: #e0e0e0;
+      font-family: 'Montserrat', sans-serif;
+      overflow: hidden;
+    }
+
+    /* TERMINAL INTRO */
+    #terminal {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #33ff33;
+      font-family: 'VT323', monospace;
+      font-size: 1.2rem;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    #terminal.hidden { display: none; }
+
+    /* MAIN CONTAINER */
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 90vw;
+      margin: auto;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid #300030;
+      padding: 26px;
+      border-radius: 22px;
+      box-shadow: 0 0 50px rgba(120, 0, 120, 0.6);
+    }
+
+    h1 {
+      font-family: 'UnifrakturCook', cursive;
+      font-size: clamp(2.2rem, 7vw, 3.4rem);
+      color: var(--violet);
+      letter-spacing: 2px;
+    }
+
+    p {
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+
+    /* CAT SPRITES */
+    .cats {
+      font-size: clamp(2rem, 7vw, 2.6rem);
+      margin-bottom: 20px;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      50% { transform: translateY(-10px); }
+    }
+
+    /* BUTTON */
+    #trickButton {
+      padding: 14px 30px;
+      font-size: 1rem;
+      border: 1px solid var(--blood);
+      background: transparent;
+      color: var(--blood);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      touch-action: manipulation;
+    }
+
+    #trickButton:hover {
+      background: var(--blood);
+      color: #000;
+      box-shadow: 0 0 25px rgba(139, 0, 0, 0.9);
+    }
+
+    /* MODAL GLITCH */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      font-family: 'UnifrakturCook', cursive;
+      font-size: clamp(2.5rem, 9vw, 3.5rem);
+      color: var(--blood);
+      animation: glitch 1s infinite;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 2px #000; }
+      25% { text-shadow: -2px -2px #300000; }
+      50% { text-shadow: 2px -2px #8b0000; }
+      75% { text-shadow: -2px 2px #200000; }
+      100% { text-shadow: 2px 2px #000; }
+    }
+
+    /* RAIN */
+    .rain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.05) 3px
+      );
+      animation: rain 0.4s linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes rain {
+      from { background-position: 0 0; }
+      to { background-position: 0 100%; }
+    }
+
+    /* CANDLES */
+    .candle {
+      position: fixed;
+      bottom: 0;
+      width: 14px;
+      height: 60px;
+      background: #eee;
+      border-radius: 4px;
+      box-shadow: inset 0 0 5px #999;
+      z-index: 2;
+    }
+
+    .flame {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 18px;
+      background: orange;
+      border-radius: 50% 50% 50% 50%;
+      animation: flicker 0.2s infinite;
+    }
+
+    @keyframes flicker {
+      50% { opacity: 0.6; transform: translateX(-50%) scale(0.9); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TERMINAL -->
+  <div id="terminal"></div>
+
+  <!-- EFFECTS -->
+  <div class="rain"></div>
+  <div class="candle" style="left: 20px"><div class="flame"></div></div>
+  <div class="candle" style="right: 20px"><div class="flame"></div></div>
+
+  <!-- MAIN -->
+  <div class="container">
+    <h1>Gothic Cats</h1>
+    <p>vampire indie • midnight rain • cursed paws</p>
+    <div class="cats">🐈‍⬛ 🩸 🐈‍⬛</div>
+    <button id="trickButton">Touch the curse</button>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal">
+    <div class="modal-content">safa lmongol!!</div>
+  </div>
+
+  <!-- AUDIO -->
+  <audio id="bgMusic" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_2b9c8cce5f.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    /* TERMINAL TYPING */
+    const terminal = document.getElementById('terminal');
+    const lines = [
+      '> booting gothic-cat-os...',
+      '> loading darkness modules...',
+      '> summoning cats...',
+      '> system ready.'
+    ];
+    let i = 0;
+
+    function typeLine() {
+      if (i < lines.length) {
+        terminal.innerHTML += lines[i] + '<br>';
+        i++;
+        setTimeout(typeLine, 700);
+      } else {
+        setTimeout(() => terminal.classList.add('hidden'), 800);
+      }
+    }
+    typeLine();
+
+    /* BUTTON */
+    const button = document.getElementById('trickButton');
+    const modal = document.getElementById('modal');
+    const music = document.getElementById('bgMusic');
+
+    const moveButton = () => {
+      const x = Math.random() * 200 - 100;
+      const y = Math.random() * 150 - 75;
+      button.style.transform = `translate(${x}px, ${y}px)`;
+    };
+
+    button.addEventListener('mouseenter', moveButton);
+    button.addEventListener('touchstart', moveButton);
+
+    button.addEventListener('click', () => {
+      modal.classList.add('active');
+      music.play().catch(()=>{});
+      setTimeout(() => modal.classList.remove('active'), 1600);
+    });
+  </script>
+
+</body>
+</html>
