@@ -152,6 +152,41 @@
         inset 0 1px 0 rgba(255,255,255,0.3);
     }
 
+    /* Sound indicator */
+    .sound-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--violet);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--violet);
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+
+    .sound-indicator:hover {
+      background: var(--violet);
+      color: #000;
+      transform: scale(1.1);
+    }
+
+    .sound-indicator.muted::after {
+      content: "";
+      position: absolute;
+      width: 2px;
+      height: 50px;
+      background: var(--blood);
+      transform: rotate(45deg);
+      transform-origin: center;
+    }
+
     /* MESSAGE */
     .message {
       position: fixed;
@@ -219,6 +254,8 @@
 
   <div class="rain"></div>
 
+  <div class="sound-indicator" id="soundToggle">🔊</div>
+
   <div class="container">
     <h1>Gothic Cats</h1>
     <div class="cats">🐈‍⬛ 🩸 🐈‍⬛</div>
@@ -229,17 +266,104 @@
     <span>safa lmongol!!</span>
   </div>
 
-  <audio id="bgMusic" loop preload="auto" volume="0.6">
-    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_2b9c8cce5f.mp3" type="audio/mpeg">
+  <!-- Background ambiance - rain sounds -->
+  <audio id="bgAmbiance" loop preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-rain-loop-1243.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Button hover sound -->
+  <audio id="hoverSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-mysterious-wind-329.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Button move sound -->
+  <audio id="moveSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-ominous-ambient-576.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Cat meow sounds -->
+  <audio id="catSound1" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-cat-meow-221.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="catSound2" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-cat-angry-meow-224.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Final reveal sound -->
+  <audio id="revealSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-spooky-magic-echo-875.mp3" type="audio/mpeg">
   </audio>
 
   <script>
     const button = document.getElementById('trickButton');
     const message = document.getElementById('message');
-    const music = document.getElementById('bgMusic');
-
+    const soundToggle = document.getElementById('soundToggle');
+    
+    // Audio elements
+    const bgAmbiance = document.getElementById('bgAmbiance');
+    const hoverSound = document.getElementById('hoverSound');
+    const moveSound = document.getElementById('moveSound');
+    const catSound1 = document.getElementById('catSound1');
+    const catSound2 = document.getElementById('catSound2');
+    const revealSound = document.getElementById('revealSound');
+    
     let moveCount = 0;
     const maxMoves = 5;
+    let soundsEnabled = true;
+    let ambiancePlaying = false;
+
+    // Initialize audio
+    function initAudio() {
+      if (!soundsEnabled) return;
+      
+      // Set volumes
+      bgAmbiance.volume = 0.2;
+      hoverSound.volume = 0.4;
+      moveSound.volume = 0.3;
+      catSound1.volume = 0.5;
+      catSound2.volume = 0.5;
+      revealSound.volume = 0.7;
+      
+      // Start ambient rain sound
+      bgAmbiance.play().then(() => {
+        ambiancePlaying = true;
+      }).catch(() => {
+        // Autoplay might be blocked - will start on user interaction
+      });
+    }
+
+    // Toggle all sounds
+    function toggleSounds() {
+      soundsEnabled = !soundsEnabled;
+      
+      if (soundsEnabled) {
+        soundToggle.textContent = '🔊';
+        soundToggle.classList.remove('muted');
+        bgAmbiance.volume = 0.2;
+        if (ambiancePlaying) {
+          bgAmbiance.play();
+        }
+      } else {
+        soundToggle.textContent = '🔇';
+        soundToggle.classList.add('muted');
+        bgAmbiance.pause();
+      }
+    }
+
+    // Play sound with safety check
+    function playSound(audioElement) {
+      if (!soundsEnabled) return;
+      
+      try {
+        // Reset and play
+        audioElement.currentTime = 0;
+        audioElement.play().catch(() => {
+          // Silent fail if audio play is blocked
+        });
+      } catch (e) {
+        // Silent fail
+      }
+    }
 
     function moveButton() {
       if (moveCount >= maxMoves) return;
@@ -251,6 +375,16 @@
 
       button.style.transform = `translate(${x}px, ${y}px)`;
       moveCount++;
+      
+      // Play move sound (ominous ambient)
+      playSound(moveSound);
+      
+      // Play cat sound on some moves
+      if (moveCount % 2 === 0) {
+        playSound(catSound1);
+      } else {
+        playSound(catSound2);
+      }
       
       // Add a subtle shake effect to the cats
       const cats = document.querySelector('.cats');
@@ -272,35 +406,53 @@
     function showMessage() {
       if (moveCount < maxMoves) return;
       
-      try {
-        music.volume = 0.6;
-        music.play();
-      } catch (e) {
-        // Audio autoplay blocked - silent fail
-      }
+      // Play reveal sound (spooky magic)
+      playSound(revealSound);
       
       message.classList.add('show');
       setTimeout(() => message.classList.remove('show'), 1600);
     }
 
+    // Play hover sound on mouseenter
+    button.addEventListener('mouseenter', () => {
+      if (moveCount < maxMoves) {
+        playSound(hoverSound);
+        moveButton();
+      }
+    });
+
     // Mobile support
     button.addEventListener('touchstart', e => {
       e.preventDefault();
+      playSound(hoverSound);
       moveButton();
       if (moveCount >= maxMoves) showMessage();
     }, { passive: false });
 
     button.addEventListener('click', () => {
+      playSound(hoverSound);
       moveButton();
       if (moveCount >= maxMoves) showMessage();
     });
 
-    // Add subtle mouseenter effect for desktop
-    button.addEventListener('mouseenter', () => {
-      if (moveCount < maxMoves) {
-        moveButton();
+    // Sound toggle
+    soundToggle.addEventListener('click', toggleSounds);
+
+    // Initialize audio on first user interaction
+    document.addEventListener('click', () => {
+      if (!ambiancePlaying && soundsEnabled) {
+        initAudio();
       }
-    });
+    }, { once: true });
+
+    document.addEventListener('touchstart', () => {
+      if (!ambiancePlaying && soundsEnabled) {
+        initAudio();
+      }
+    }, { once: true });
+
+    // Initialize audio settings
+    initAudio();
   </script>
 
 </body>
